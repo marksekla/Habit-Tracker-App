@@ -1,5 +1,7 @@
 package com.example.habittracker;
 
+import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
@@ -11,8 +13,10 @@ import android.text.method.PasswordTransformationMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Toast;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -23,8 +27,12 @@ import android.widget.EditText;
 public class LogInFragment extends Fragment {
 
     private CheckBox checkBox;
-    private EditText et_password;
+    private EditText et_password, et_username;
     private Drawable unlocked_drawable, locked_drawable;
+    private Button btn_login;
+    private DbHelper database;
+    private Intent intent;
+
 
     public LogInFragment() {
         // Required empty public constructor
@@ -50,9 +58,15 @@ public class LogInFragment extends Fragment {
         super.onStart();
         unlocked_drawable = ContextCompat.getDrawable(getActivity(), R.drawable.baseline_lock_open_24);
         locked_drawable = ContextCompat.getDrawable(getActivity(), R.drawable.baseline_lock_24);
-
         et_password = (EditText)getView().findViewById(R.id.et_password);
+        et_username = (EditText)getView().findViewById(R.id.et_username);
+        btn_login = (Button)getView().findViewById(R.id.btn_login);
         checkBox = (CheckBox)getView().findViewById(R.id.checkBox);
+        intent = new Intent(getContext(), landingPage.class);
+
+        database = new DbHelper(getContext(), "database", null, 1);
+        database.getReadableDatabase();
+
         checkBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,5 +79,52 @@ public class LogInFragment extends Fragment {
                 }
             }
         });
+
+        btn_login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(isPasswordsValid() && isUsernameValid() && isValidUser()){
+                    String username = et_username.getText().toString();
+
+                    intent.putExtra("username", username);
+                    startActivity(intent);
+                }
+            }
+        });
+    }
+
+    private boolean isPasswordsValid() {
+        // if the password is empty
+        if(et_password.getText().toString().isEmpty()) {
+            Toast toast = Toast.makeText(getActivity(), "Password is empty.", Toast.LENGTH_SHORT);
+            toast.show();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isUsernameValid() {
+        if(et_username.getText().toString().isEmpty()) {
+            Toast toast = Toast.makeText(getActivity(), "Username is empty.", Toast.LENGTH_SHORT);
+            toast.show();
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isValidUser(){
+        String username = et_username.getText().toString();
+        String password = et_password.getText().toString();
+
+        Cursor cursor = database.getUserByUsernameAndPassword(username, password);
+
+        // if the username and password are not in the db, return false
+        if(cursor.getCount() == 0){
+            Toast toast = Toast.makeText(getActivity(), "Username or password is incorrect.", Toast.LENGTH_SHORT);
+            toast.show();
+            return false;
+        }
+        return true;
     }
 }
