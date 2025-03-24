@@ -21,6 +21,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -36,9 +38,11 @@ public class landingPage extends AppCompatActivity {
     FloatingActionButton fab_add;
     Dialog dialog;
     Button btn_dialog_add, btn_dialog_cancel;
+    RecyclerView recyclerView;
     String title, description, selectedDay, type;
     Integer count, userId;
     DbHelper database;
+    HabitAdapter habitAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +69,23 @@ public class landingPage extends AppCompatActivity {
         spinner_weekdays = dialog.findViewById(R.id.spinner_weekdays);
         btn_dialog_add = dialog.findViewById(R.id.btn_dialog_add);
         btn_dialog_cancel = dialog.findViewById(R.id.btn_dialog_cancel);
+        recyclerView = findViewById(R.id.recyclerView);
 
         database = new DbHelper(getApplicationContext(), "database.db", null, 1);
         database.getWritableDatabase();
+
+        // get userID from database
+        Cursor cursor = database.getUserByUsername(logInIntent.getStringExtra("username"));
+        if (cursor != null && cursor.moveToFirst()) {
+            userId = Integer.parseInt(cursor.getString(cursor.getColumnIndexOrThrow("id")));
+        }
+
+        // Set LayoutManager
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        // Set Adapter
+        habitAdapter = new HabitAdapter(database.getHabitsByUserId(userId));
+        recyclerView.setAdapter(habitAdapter);
 
         tv_message.setText("Hello " + logInIntent.getStringExtra("username") + "!");
 
@@ -126,16 +144,13 @@ public class landingPage extends AppCompatActivity {
                 selectedDay = spinner_weekdays.getSelectedItem().toString();
                 type = "none"; //types can be added later if needed
 
-                // get userID from database
-                Cursor cursor = database.getUserByUsername(logInIntent.getStringExtra("username"));
-                if (cursor != null && cursor.moveToFirst()) {
-                    userId = Integer.parseInt(cursor.getString(cursor.getColumnIndexOrThrow("id")));
-                }
-
                 // create new habit and add it to the database
                 Habit habit = new Habit(userId, title, description, type, selectedDay, count);
                 database.addHabit(habit);
                 Log.d("habits", database.getHabitsByUserId(userId).toString());
+
+                habitAdapter = new HabitAdapter(database.getHabitsByUserId(userId));
+                recyclerView.setAdapter(habitAdapter);
 
                 Toast.makeText(landingPage.this, "Habit added!", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
