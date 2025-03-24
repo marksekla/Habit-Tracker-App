@@ -70,6 +70,7 @@ public class landingPage extends AppCompatActivity {
 
         tv_message.setText("Hello " + logInIntent.getStringExtra("username") + "!");
 
+        // sets weekdays to dropdown list
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this, R.array.days_of_week, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -94,6 +95,7 @@ public class landingPage extends AppCompatActivity {
             }
         });
 
+        // close dialog when cancel is pressed
         btn_dialog_cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -105,10 +107,13 @@ public class landingPage extends AppCompatActivity {
             @Override
 
             public void onClick(View v) {
+                // return if the user did not enter a title
                 if(et_title.getText().toString().isEmpty()){
                     Toast.makeText(landingPage.this, "Title is empty!", Toast.LENGTH_LONG).show();
                     return;
                 }
+
+                // return if a user did not enter a count
                 if(et_count.getText().toString().isEmpty()){
                     Toast.makeText(landingPage.this, "Count is empty!", Toast.LENGTH_LONG).show();
                     return;
@@ -118,13 +123,15 @@ public class landingPage extends AppCompatActivity {
                 description = tiet_description.getText().toString();
                 count = Integer.parseInt(et_count.getText().toString());
                 selectedDay = spinner_weekdays.getSelectedItem().toString();
-                type = "none";
+                type = "none"; //types can be added later if needed
 
+                // get userID from database
                 Cursor cursor = database.getUserByUsername(logInIntent.getStringExtra("username"));
                 if (cursor != null && cursor.moveToFirst()) {
                     userId = Integer.parseInt(cursor.getString(cursor.getColumnIndexOrThrow("id")));
                 }
 
+                // create new habit and add it to the database
                 Habit habit = new Habit(userId, title, description, type, selectedDay, count);
                 database.addHabit(habit);
                 Log.d("habits", database.getHabitsByUserId(userId).toString());
