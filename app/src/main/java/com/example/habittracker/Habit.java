@@ -18,6 +18,20 @@ public class Habit {
         this.count = count;
     }
 
+    public Habit(int id, int userId, String title, String description, String type, String frequency, int count) {
+        this.id = id;
+        this.userId = userId;
+        this.title = title;
+        this.description = description;
+        this.type = type;
+        this.frequency = frequency;
+        this.count = count;
+    }
+
+    public int getId(){
+        return id;
+    }
+
     public int getUserId() {
         return userId;
     }

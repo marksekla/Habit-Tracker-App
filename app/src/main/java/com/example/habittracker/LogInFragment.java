@@ -64,7 +64,7 @@ public class LogInFragment extends Fragment {
         checkBox = (CheckBox)getView().findViewById(R.id.checkBox);
         intent = new Intent(getContext(), landingPage.class);
 
-        database = new DbHelper(getContext(), "database", null, 1);
+        database = new DbHelper(getContext(), "database.db", null, 1);
         database.getReadableDatabase();
 
         checkBox.setOnClickListener(new View.OnClickListener() {

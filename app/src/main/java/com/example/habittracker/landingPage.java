@@ -50,6 +50,7 @@ public class landingPage extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
         dialog = new Dialog(landingPage.this);
         dialog.setContentView(R.layout.add_habit_form);
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -65,7 +66,7 @@ public class landingPage extends AppCompatActivity {
         btn_dialog_add = dialog.findViewById(R.id.btn_dialog_add);
         btn_dialog_cancel = dialog.findViewById(R.id.btn_dialog_cancel);
 
-        database = new DbHelper(getApplicationContext(), "database", null, 1);
+        database = new DbHelper(getApplicationContext(), "database.db", null, 1);
         database.getWritableDatabase();
 
         tv_message.setText("Hello " + logInIntent.getStringExtra("username") + "!");

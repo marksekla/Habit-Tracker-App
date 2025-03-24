@@ -20,7 +20,7 @@ public class DbHelper extends SQLiteOpenHelper {
     private final String createUsersTable = "CREATE TABLE users(id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT)";
     private final String createHabitsTable = "CREATE TABLE " +
             "habits(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT, type TEXT, frequency TEXT," +
-            "count TEXT, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES course(id) ON DELETE CASCADE)";
+            "count TEXT, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)";
 
     public DbHelper(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
@@ -103,23 +103,34 @@ public class DbHelper extends SQLiteOpenHelper {
      */
     public ArrayList<Habit> getHabitsByUserId(int userId) {
         SQLiteDatabase sqLiteDatabase = getReadableDatabase();
-        ArrayList habits = new ArrayList<>();
+        ArrayList<Habit> habits = new ArrayList<>();
 
         Cursor cursor = sqLiteDatabase.rawQuery("SELECT * FROM habits WHERE user_id = ?",
                 new String[]{String.valueOf(userId)});
 
         if (cursor.moveToFirst()) {
             do {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
                 String title = cursor.getString(cursor.getColumnIndexOrThrow("title"));
                 String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
                 String type = cursor.getString(cursor.getColumnIndexOrThrow("type"));
                 String frequency = cursor.getString(cursor.getColumnIndexOrThrow("frequency"));
                 int count = cursor.getInt(cursor.getColumnIndexOrThrow("count"));
 
-                Habit habit = new Habit(userId, title, description, type, frequency, count);
+                Habit habit = new Habit(id, userId, title, description, type, frequency, count);
                 habits.add(habit);
             } while (cursor.moveToNext());
         }
         return habits;
+    }
+
+    /**
+     * Nukes database.
+     */
+    public void ResetDatabase(){
+        SQLiteDatabase sqLiteDatabase = getWritableDatabase();
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS users");
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS habits");
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS courses");
     }
 }
