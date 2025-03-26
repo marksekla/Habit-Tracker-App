@@ -12,7 +12,7 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 
 /**
- * @author Aaron Sinn
+ * @author Aaron Sinn & Mark Sekla
  * DbHelper provides methods for setting up and interacting with the database
  */
 public class DbHelper extends SQLiteOpenHelper {
@@ -34,7 +34,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        // Handle schema migrations here
     }
 
     /**
@@ -48,7 +48,6 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     /**
-     *
      * @param username
      * @param password
      * @return all information about a user
@@ -122,6 +121,75 @@ public class DbHelper extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
         return habits;
+    }
+
+    /**
+     * Get habits by user ID and day of the week
+     * @param userId the user ID
+     * @param day the day of the week to filter by
+     * @return ArrayList of habits for the specified user and day
+     */
+    public ArrayList<Habit> getHabitsByUserIdAndDay(int userId, String day) {
+        SQLiteDatabase sqLiteDatabase = getReadableDatabase();
+        ArrayList<Habit> habits = new ArrayList<>();
+
+        // Convert abbreviated day name from tab to full day name if needed
+        String fullDayName = day;
+        if (day.equals("Mon")) fullDayName = "Monday";
+        else if (day.equals("Tue")) fullDayName = "Tuesday";
+        else if (day.equals("Wed")) fullDayName = "Wednesday";
+        else if (day.equals("Thu")) fullDayName = "Thursday";
+        else if (day.equals("Fri")) fullDayName = "Friday";
+        else if (day.equals("Sat")) fullDayName = "Saturday";
+        else if (day.equals("Sun")) fullDayName = "Sunday";
+
+        Cursor cursor = sqLiteDatabase.rawQuery("SELECT * FROM habits WHERE user_id = ? AND frequency = ?",
+                new String[]{String.valueOf(userId), fullDayName});
+
+        if (cursor.moveToFirst()) {
+            do {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                String title = cursor.getString(cursor.getColumnIndexOrThrow("title"));
+                String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
+                String type = cursor.getString(cursor.getColumnIndexOrThrow("type"));
+                String frequency = cursor.getString(cursor.getColumnIndexOrThrow("frequency"));
+                int count = cursor.getInt(cursor.getColumnIndexOrThrow("count"));
+
+                Habit habit = new Habit(id, userId, title, description, type, frequency, count);
+                habits.add(habit);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return habits;
+    }
+
+    /**
+     * Deletes a habit from the database by its ID
+     * @param habitId the ID of the habit to delete
+     * @return true if successfully deleted, false otherwise
+     */
+    public boolean deleteHabit(int habitId) {
+        SQLiteDatabase db = getWritableDatabase();
+        int result = db.delete("habits", "id = ?", new String[]{String.valueOf(habitId)});
+        return result > 0;
+    }
+
+    /**
+     * Updates an existing habit in the database
+     * @param habit the habit with updated values
+     * @return true if successfully updated, false otherwise
+     */
+    public boolean updateHabit(Habit habit) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("title", habit.getTitle());
+        values.put("description", habit.getDescription());
+        values.put("type", habit.getType());
+        values.put("frequency", habit.getFrequency());
+        values.put("count", habit.getCount());
+
+        int result = db.update("habits", values, "id = ?", new String[]{String.valueOf(habit.getId())});
+        return result > 0;
     }
 
     /**

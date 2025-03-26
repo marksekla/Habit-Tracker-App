@@ -1,84 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".landingPage">
 
-    <TextView
-        android:id="@+id/tv_test"
-        android:layout_width="214dp"
-        android:layout_height="41dp"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="4dp"
-        android:text="Hello Name!"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayout3"
-        android:layout_width="409dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="56dp"
+    <!-- Updated Toolbar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/blue"
+        android:elevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.tabs.TabItem
+        <TextView
+            android:id="@+id/tv_test"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Mon" />
+            android:text="Hello Name!"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_gravity="start"
+            android:layout_marginStart="16dp" />
 
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Tue" />
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="end"
+            android:layout_marginEnd="16dp"
+            android:src="@drawable/motion2" />
+    </androidx.appcompat.widget.Toolbar>
 
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Wed" />
+    <!-- Day Filter Tabs -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/light_blue"
+        app:tabIndicatorColor="@color/blue"
+        app:tabSelectedTextColor="@color/blue"
+        app:tabTextColor="@color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Thu" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Fri" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sat" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sun" />
+        <com.google.android.material.tabs.TabItem android:text="All" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <com.google.android.material.tabs.TabItem android:text="Mon" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <com.google.android.material.tabs.TabItem android:text="Tue" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <com.google.android.material.tabs.TabItem android:text="Wed" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <com.google.android.material.tabs.TabItem android:text="Thu" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <com.google.android.material.tabs.TabItem android:text="Fri" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <com.google.android.material.tabs.TabItem android:text="Sat" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <com.google.android.material.tabs.TabItem android:text="Sun" android:layout_width="wrap_content" android:layout_height="wrap_content" />
     </com.google.android.material.tabs.TabLayout>
 
+    <!-- "No habits" text -->
+    <TextView
+        android:id="@+id/tv_no_habits"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No habits for this day. Add a new habit!"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout3" />
+
+    <!-- Habits RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
-        android:layout_width="410dp"
-        android:layout_height="match_parent"
-        android:layout_marginTop="110dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout3"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
+    <!-- Floating Action Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:clickable="true"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        android:contentDescription="add habit"
+        app:backgroundTint="@color/blue"
+        app:fabCustomSize="56dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/baseline_add_24"
-        android:contentDescription="add habit"/>
-
+        app:tint="@color/white"
+        app:srcCompat="@drawable/baseline_add_24" />
 </androidx.constraintlayout.widget.ConstraintLayout>

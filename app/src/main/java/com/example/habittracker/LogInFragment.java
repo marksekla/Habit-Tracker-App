@@ -2,41 +2,26 @@ package com.example.habittracker;
 
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-
-import android.text.InputType;
-import android.text.method.PasswordTransformationMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.Toast;
-
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link LogInFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import com.google.android.material.textfield.TextInputEditText;
 
 public class LogInFragment extends Fragment {
 
-    private CheckBox checkBox;
-    private EditText et_password, et_username;
-    private Drawable unlocked_drawable, locked_drawable;
+    private TextInputEditText et_password, et_username;
     private Button btn_login;
     private DbHelper database;
     private Intent intent;
 
-
     public LogInFragment() {
         // Required empty public constructor
     }
+
     public static LogInFragment newInstance(String param1, String param2) {
         return new LogInFragment();
     }
@@ -49,43 +34,28 @@ public class LogInFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_log_in, container, false);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        unlocked_drawable = ContextCompat.getDrawable(getActivity(), R.drawable.baseline_lock_open_24);
-        locked_drawable = ContextCompat.getDrawable(getActivity(), R.drawable.baseline_lock_24);
-        et_password = (EditText)getView().findViewById(R.id.et_password);
-        et_username = (EditText)getView().findViewById(R.id.et_username);
-        btn_login = (Button)getView().findViewById(R.id.btn_login);
-        checkBox = (CheckBox)getView().findViewById(R.id.checkBox);
+
+        // Initialize views
+        et_password = getView().findViewById(R.id.et_password);
+        et_username = getView().findViewById(R.id.et_username);
+        btn_login = getView().findViewById(R.id.btn_login);
         intent = new Intent(getContext(), landingPage.class);
 
         database = new DbHelper(getContext(), "database.db", null, 1);
         database.getReadableDatabase();
 
-        checkBox.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (checkBox.isChecked()) {
-                    et_password.setCompoundDrawablesRelativeWithIntrinsicBounds(unlocked_drawable, null, null, null);
-                    et_password.setInputType(InputType.TYPE_CLASS_TEXT);
-                } else {
-                    et_password.setCompoundDrawablesRelativeWithIntrinsicBounds(locked_drawable, null, null, null);
-                    et_password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                }
-            }
-        });
-
+        // Handle login
         btn_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isPasswordsValid() && isUsernameValid() && isValidUser()){
+                if (isPasswordsValid() && isUsernameValid() && isValidUser()) {
                     String username = et_username.getText().toString();
-
                     intent.putExtra("username", username);
                     startActivity(intent);
                 }
@@ -94,35 +64,29 @@ public class LogInFragment extends Fragment {
     }
 
     private boolean isPasswordsValid() {
-        // if the password is empty
-        if(et_password.getText().toString().isEmpty()) {
-            Toast toast = Toast.makeText(getActivity(), "Password is empty.", Toast.LENGTH_SHORT);
-            toast.show();
+        if (et_password.getText().toString().isEmpty()) {
+            Toast.makeText(getActivity(), "Password is empty.", Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;
     }
 
     private boolean isUsernameValid() {
-        if(et_username.getText().toString().isEmpty()) {
-            Toast toast = Toast.makeText(getActivity(), "Username is empty.", Toast.LENGTH_SHORT);
-            toast.show();
+        if (et_username.getText().toString().isEmpty()) {
+            Toast.makeText(getActivity(), "Username is empty.", Toast.LENGTH_SHORT).show();
             return false;
         }
-
         return true;
     }
 
-    private boolean isValidUser(){
+    private boolean isValidUser() {
         String username = et_username.getText().toString();
         String password = et_password.getText().toString();
 
         Cursor cursor = database.getUserByUsernameAndPassword(username, password);
 
-        // if the username and password are not in the db, return false
-        if(cursor.getCount() == 0){
-            Toast toast = Toast.makeText(getActivity(), "Username or password is incorrect.", Toast.LENGTH_SHORT);
-            toast.show();
+        if (cursor.getCount() == 0) {
+            Toast.makeText(getActivity(), "Username or password is incorrect.", Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;

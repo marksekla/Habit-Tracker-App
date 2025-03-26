@@ -16,7 +16,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -25,14 +24,20 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+
+import java.util.ArrayList;
 
 public class landingPage extends AppCompatActivity {
 
-    TextView tv_message;
+    TextView tv_message, tv_no_habits;
     EditText et_title, et_count;
     TextInputEditText tiet_description;
     Spinner spinner_weekdays;
+    TabLayout tabLayout;
+    TextInputLayout til_title, til_count, til_description;
 
     Intent logInIntent;
     FloatingActionButton fab_add;
@@ -43,6 +48,7 @@ public class landingPage extends AppCompatActivity {
     Integer count, userId;
     DbHelper database;
     HabitAdapter habitAdapter;
+    String currentDay = "All"; // Default to showing all habits
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,24 +63,36 @@ public class landingPage extends AppCompatActivity {
 
         dialog = new Dialog(landingPage.this);
         dialog.setContentView(R.layout.add_habit_form);
-        dialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         dialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.dialog_background));
         dialog.setCancelable(false);
+
+        // Initialize views
         logInIntent = getIntent();
         tv_message = findViewById(R.id.tv_test);
+        tv_no_habits = findViewById(R.id.tv_no_habits);
         fab_add = findViewById(R.id.fab_add);
+
+        // Dialog views with updated references
         et_title = dialog.findViewById(R.id.et_title);
         et_count = dialog.findViewById(R.id.et_count);
         tiet_description = dialog.findViewById(R.id.tiet_description);
         spinner_weekdays = dialog.findViewById(R.id.spinner_weekdays);
         btn_dialog_add = dialog.findViewById(R.id.btn_dialog_add);
         btn_dialog_cancel = dialog.findViewById(R.id.btn_dialog_cancel);
+
+        // New TextInputLayout references
+        til_title = dialog.findViewById(R.id.til_title);
+        til_count = dialog.findViewById(R.id.til_count);
+        til_description = dialog.findViewById(R.id.til_description);
+
         recyclerView = findViewById(R.id.recyclerView);
+        tabLayout = findViewById(R.id.tabLayout3);
 
         database = new DbHelper(getApplicationContext(), "database.db", null, 1);
         database.getWritableDatabase();
 
-        // get userID from database
+        // Get userID from database
         Cursor cursor = database.getUserByUsername(logInIntent.getStringExtra("username"));
         if (cursor != null && cursor.moveToFirst()) {
             userId = Integer.parseInt(cursor.getString(cursor.getColumnIndexOrThrow("id")));
@@ -84,12 +102,12 @@ public class landingPage extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         // Set Adapter
-        habitAdapter = new HabitAdapter(database.getHabitsByUserId(userId));
+        habitAdapter = new HabitAdapter(database.getHabitsByUserId(userId), this);
         recyclerView.setAdapter(habitAdapter);
 
         tv_message.setText("Hello " + logInIntent.getStringExtra("username") + "!");
 
-        // sets weekdays to dropdown list
+        // Set weekdays to dropdown list
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this, R.array.days_of_week, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -107,54 +125,109 @@ public class landingPage extends AppCompatActivity {
             }
         });
 
-        fab_add.setOnClickListener(new View.OnClickListener() {
+        // Tab layout filter setup
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
-            public void onClick(View v) {
-                dialog.show();
+            public void onTabSelected(TabLayout.Tab tab) {
+                String day = tab.getText().toString();
+                currentDay = day;
+                updateHabitsList();
             }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
         });
 
-        // close dialog when cancel is pressed
-        btn_dialog_cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
+        // Show dialog on FAB click
+        fab_add.setOnClickListener(v -> {
+            resetDialogFields();
+            dialog.show();
         });
 
-        btn_dialog_add.setOnClickListener(new View.OnClickListener() {
-            @Override
+        // Cancel dialog
+        btn_dialog_cancel.setOnClickListener(v -> dialog.dismiss());
 
-            public void onClick(View v) {
-                // return if the user did not enter a title
-                if(et_title.getText().toString().isEmpty()){
-                    Toast.makeText(landingPage.this, "Title is empty!", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                // return if a user did not enter a count
-                if(et_count.getText().toString().isEmpty()){
-                    Toast.makeText(landingPage.this, "Count is empty!", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                title = et_title.getText().toString();
-                description = tiet_description.getText().toString();
-                count = Integer.parseInt(et_count.getText().toString());
-                selectedDay = spinner_weekdays.getSelectedItem().toString();
-                type = "none"; //types can be added later if needed
-
-                // create new habit and add it to the database
-                Habit habit = new Habit(userId, title, description, type, selectedDay, count);
-                database.addHabit(habit);
-                Log.d("habits", database.getHabitsByUserId(userId).toString());
-
-                habitAdapter = new HabitAdapter(database.getHabitsByUserId(userId));
-                recyclerView.setAdapter(habitAdapter);
-
+        // Add habit button click
+        btn_dialog_add.setOnClickListener(v -> {
+            if (validateInputs()) {
+                createAndSaveHabit();
                 Toast.makeText(landingPage.this, "Habit added!", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
+                updateHabitsList();
             }
         });
+
+        // Initial habit display
+        updateHabitsList();
+    }
+
+    private void resetDialogFields() {
+        et_title.setText("");
+        et_count.setText("");
+        tiet_description.setText("");
+        spinner_weekdays.setSelection(0);
+
+        // Clear any error states
+        til_title.setError(null);
+        til_count.setError(null);
+    }
+
+    private boolean validateInputs() {
+        boolean isValid = true;
+
+        if (et_title.getText().toString().trim().isEmpty()) {
+            til_title.setError("Title is required");
+            isValid = false;
+        } else {
+            til_title.setError(null);
+        }
+
+        if (et_count.getText().toString().trim().isEmpty()) {
+            til_count.setError("Count is required");
+            isValid = false;
+        } else {
+            til_count.setError(null);
+        }
+
+        return isValid;
+    }
+
+    private void createAndSaveHabit() {
+        title = et_title.getText().toString().trim();
+        description = tiet_description.getText().toString().trim();
+        count = Integer.parseInt(et_count.getText().toString().trim());
+        selectedDay = spinner_weekdays.getSelectedItem().toString();
+        type = "none"; // Optional for future use
+
+        Habit habit = new Habit(userId, title, description, type, selectedDay, count);
+        database.addHabit(habit);
+    }
+
+    private void updateHabitsList() {
+        ArrayList<Habit> habits;
+
+        if (currentDay.equals("All")) {
+            habits = database.getHabitsByUserId(userId);
+        } else {
+            habits = database.getHabitsByUserIdAndDay(userId, currentDay);
+        }
+
+        if (habits.isEmpty()) {
+            tv_no_habits.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        } else {
+            tv_no_habits.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+            habitAdapter.updateData(habits);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateHabitsList();
     }
 }
