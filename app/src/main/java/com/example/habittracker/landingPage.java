@@ -44,6 +44,7 @@ public class landingPage extends AppCompatActivity {
     Dialog dialog;
     Button btn_dialog_add, btn_dialog_cancel;
     RecyclerView recyclerView;
+    Button btnLogout;  // Add logout button reference
     String title, description, selectedDay, type;
     Integer count, userId;
     DbHelper database;
@@ -88,6 +89,7 @@ public class landingPage extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.recyclerView);
         tabLayout = findViewById(R.id.tabLayout3);
+        btnLogout = findViewById(R.id.btn_logout);  // Reference to logout button
 
         database = new DbHelper(getApplicationContext(), "database.db", null, 1);
         database.getWritableDatabase();
@@ -160,8 +162,20 @@ public class landingPage extends AppCompatActivity {
             }
         });
 
+        // Set up logout functionality
+        btnLogout.setOnClickListener(v -> performLogout());
+
         // Initial habit display
         updateHabitsList();
+    }
+
+    private void performLogout() {
+        // Clear any session data or other logout logic here
+
+        // Redirect to Login Activity
+        Intent intent = new Intent(landingPage.this, LogInFragment.class);  // Replace with actual Login Activity
+        startActivity(intent);
+        finish(); // Close the current activity to prevent returning to it
     }
 
     private void resetDialogFields() {
