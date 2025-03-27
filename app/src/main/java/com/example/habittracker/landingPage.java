@@ -44,7 +44,7 @@ public class landingPage extends AppCompatActivity {
     Dialog dialog;
     Button btn_dialog_add, btn_dialog_cancel;
     RecyclerView recyclerView;
-    Button btnLogout;  // Add logout button reference
+    TextView btnLogout;  // Add logout button reference
     String title, description, selectedDay, type;
     Integer count, userId;
     DbHelper database;
@@ -103,8 +103,8 @@ public class landingPage extends AppCompatActivity {
         // Set LayoutManager
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Set Adapter
-        habitAdapter = new HabitAdapter(database.getHabitsByUserId(userId), this);
+        // Set Adapter - initially show day indicators as we start in "All" tab
+        habitAdapter = new HabitAdapter(database.getHabitsByUserId(userId), this, true);
         recyclerView.setAdapter(habitAdapter);
 
         tv_message.setText("Hello " + logInIntent.getStringExtra("username") + "!");
@@ -133,7 +133,10 @@ public class landingPage extends AppCompatActivity {
             public void onTabSelected(TabLayout.Tab tab) {
                 String day = tab.getText().toString();
                 currentDay = day;
-                updateHabitsList();
+
+                // Show day indicators only in "All" tab
+                boolean showDayIndicator = "All".equals(day);
+                updateHabitsList(showDayIndicator);
             }
 
             @Override
@@ -158,7 +161,7 @@ public class landingPage extends AppCompatActivity {
                 createAndSaveHabit();
                 Toast.makeText(landingPage.this, "Habit added!", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
-                updateHabitsList();
+                updateHabitsList("All".equals(currentDay));
             }
         });
 
@@ -166,14 +169,19 @@ public class landingPage extends AppCompatActivity {
         btnLogout.setOnClickListener(v -> performLogout());
 
         // Initial habit display
-        updateHabitsList();
+        updateHabitsList(true); // Initially show day indicators
     }
 
     private void performLogout() {
         // Clear any session data or other logout logic here
 
-        // Redirect to Login Activity
-        Intent intent = new Intent(landingPage.this, LogInFragment.class);  // Replace with actual Login Activity
+        // Redirect to the MainActivity which hosts both login and signup tabs
+        Intent intent = new Intent(landingPage.this, MainActivity.class);
+
+        // Add an extra to indicate we want to show the Login tab (index 1) instead of the default Signup (index 0)
+        intent.putExtra("tab_index", 1);
+
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish(); // Close the current activity to prevent returning to it
     }
@@ -220,7 +228,7 @@ public class landingPage extends AppCompatActivity {
         database.addHabit(habit);
     }
 
-    private void updateHabitsList() {
+    private void updateHabitsList(boolean showDayIndicator) {
         ArrayList<Habit> habits;
 
         if (currentDay.equals("All")) {
@@ -235,13 +243,18 @@ public class landingPage extends AppCompatActivity {
         } else {
             tv_no_habits.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
-            habitAdapter.updateData(habits);
+            habitAdapter.updateData(habits, showDayIndicator);
         }
+    }
+
+    // Overloaded method for backward compatibility
+    private void updateHabitsList() {
+        updateHabitsList("All".equals(currentDay));
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        updateHabitsList();
+        updateHabitsList("All".equals(currentDay));
     }
 }

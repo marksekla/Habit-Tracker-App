@@ -46,5 +46,11 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }).attach();
+
+        // Check if we should navigate to a specific tab (from logout button)
+        if (getIntent().hasExtra("tab_index")) {
+            int tabIndex = getIntent().getIntExtra("tab_index", 0);
+            viewPager.setCurrentItem(tabIndex);
+        }
     }
 }

@@ -28,11 +28,17 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
     private ArrayList<Habit> habitList;
     private Context context;
     private DbHelper database;
+    private boolean showDayIndicator; // Flag to control day indicator visibility
 
-    public HabitAdapter(ArrayList<Habit> habitList, Context context) {
+    public HabitAdapter(ArrayList<Habit> habitList, Context context, boolean showDayIndicator) {
         this.habitList = habitList;
         this.context = context;
         this.database = new DbHelper(context, "database.db", null, 1);
+        this.showDayIndicator = showDayIndicator;
+    }
+
+    public HabitAdapter(ArrayList<Habit> habitList, Context context) {
+        this(habitList, context, true); // Default to showing day indicators
     }
 
     @NonNull
@@ -54,6 +60,14 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
         SpannableString content = new SpannableString(text);
         content.setSpan(new UnderlineSpan(), 0, text.length(), 0);
         holder.tv_title.setText(content);
+
+        // Show or hide day indicator based on current tab
+        if (showDayIndicator && holder.tv_day_indicator != null) {
+            holder.tv_day_indicator.setVisibility(View.VISIBLE);
+            holder.tv_day_indicator.setText(habit.getFrequency());
+        } else if (holder.tv_day_indicator != null) {
+            holder.tv_day_indicator.setVisibility(View.GONE);
+        }
 
         holder.fab_edit.setOnClickListener(v -> showEditDialog(habit, position));
         holder.fab_delete.setOnClickListener(v -> deleteHabit(habit, position));
@@ -146,7 +160,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tv_title, tv_description, tv_count;
+        TextView tv_title, tv_description, tv_count, tv_day_indicator;
         FloatingActionButton fab_edit, fab_delete;
 
         public ViewHolder(@NonNull View itemView) {
@@ -155,13 +169,19 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
             tv_title = itemView.findViewById(R.id.tv_title);
             tv_description = itemView.findViewById(R.id.tv_description);
             tv_count = itemView.findViewById(R.id.tv_count);
+            tv_day_indicator = itemView.findViewById(R.id.tv_day_indicator);
             fab_edit = itemView.findViewById(R.id.fab_edit);
             fab_delete = itemView.findViewById(R.id.fab_delete);
         }
     }
 
-    public void updateData(ArrayList<Habit> newHabits) {
+    public void updateData(ArrayList<Habit> newHabits, boolean showDayIndicator) {
         this.habitList = newHabits;
+        this.showDayIndicator = showDayIndicator;
         notifyDataSetChanged();
+    }
+
+    public void updateData(ArrayList<Habit> newHabits) {
+        updateData(newHabits, this.showDayIndicator);
     }
 }
